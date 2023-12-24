@@ -1,0 +1,10 @@
+#+TITLE: Read me
+#+AUTHOR: Mir Saheb Ali
+* Doom Emacs Config
+
+
+#+BEGIN_SRC bash
+
+git clone git@github.com:mirahebali/doom.git ~/.config/doom
+
+#+END_SRC
