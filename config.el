@@ -20,7 +20,22 @@
 ;;
 ;; See 'C-h v doom-font' for documentation and more examples of what they
 ;; accept. For example:
+
+;; There are two ways to load a theme. Both assume the theme is installed and
+;; available. You can either set `doom-theme' or manually load a theme with the
+;; `load-theme' function. This is the default:
 ;;
+
+(setq doom-theme 'catppuccin)
+
+(use-package! catppuccin-theme
+  :config
+  (catppuccin-set-color 'base "#000000")
+  ;; change base to #000000 for the currently active flavor
+  ) ;; change base to #000000 for the currently active flavor
+;; change base to #000000 for the currently active flavor
+
+
 (setq doom-font (font-spec :family "JetBrainsMono Nerd Font" :size 16 :weight 'normal)
       doom-variable-pitch-font (font-spec :family "JetBrainsMono Nerd Font" :size 16 :weight 'normal))
 (set-face-attribute 'font-lock-comment-face nil
@@ -31,7 +46,7 @@
   :ensure t
   :config
   (setq centaur-tabs-style "bar"
-        centaur-tabs-set-bar 'over
+        centaur-tabs-set-bar 'under
         centaur-tabs-height 32
         centaur-tabs-set-icons t
         centaur-tabs-gray-out-icons 'buffer)
@@ -41,11 +56,6 @@
 ;; up, `M-x eval-region' to execute elisp code, and 'M-x doom/reload-font' to
 ;; refresh your font settings. If Emacs still can't find your font, it likely
 ;; wasn't installed correctly. Font issues are rarely Doom issues!
-
-;; There are two ways to load a theme. Both assume the theme is installed and
-;; available. You can either set `doom-theme' or manually load a theme with the
-;; `load-theme' function. This is the default:
-
 
 ;; This determines the style of line numbers in effect. If set to `nil', line
 ;; numbers are disabled. For relative line numbers, set this to `relative'.
@@ -87,57 +97,133 @@
 ;;
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
+
 ;; `Transparent'
 (set-frame-parameter nil 'alpha-background 50)
 (add-to-list 'default-frame-alist '(alpha-background . 50))
 
-
-(setq doom-theme 'catppuccin)
-
-
-(use-package! catppuccin-theme
-  :config
-  (catppuccin-set-color 'base "#000000") ;; change base to #000000 for the currently active flavor
-  (catppuccin-reload)
-  ) ;; change base to #000000 for the currently active flavor
-;; change base to #000000 for the currently active flavor
-
-
                                         ;
 
 ;; `Doom custom dashboard'
-(setq fancy-splash-image "~/.config/doom/images/Arch-linux-logo.png")
+;; (setq fancy-splash-image "~/.config/doom/images/Arch-linux-logo.png")
 
 ;; My 'custom' `Dashboard'
 
-;; (after! dashboard
-;;   :init
-;;   (setq initial-buffer-choice 'dashboard-open)
-;;   (setq dashboard-set-heading-icons t)
-;;   (setq dashboard-set-file-icons t)
-;;   (setq dashboard-banner-logo-title "R.T.F.M.  Run The Funking Monad")
-;;   (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-;;   ;; (setq dashboard-startup-banner "/home/mirsahebali/.config/emacs/images/Arch-linux-logo.png")  ;; use custom image as banner
-;;   (setq dashboard-center-content t) ;; set to 't' for centered content
-;;   (setq dashboard-items '((recents . 5)
-;;                           (agenda . 5 )
-;;                           (bookmarks . 3)
-;;                           (projects . 3)))
-;;   :custom
-;;   (dashboard-modify-heading-icons '((recents . "file-text")
-;;                                     (bookmarks . "book")))
-;;   :config
-;;   (dashboard-setup-startup-hook))
+(use-package! dashboard
+  :init
+  (setq initial-buffer-choice 'dashboard-open)
+  (setq dashboard-set-heading-icons t)
+  (setq dashboard-set-file-icons t)
+  (setq dashboard-banner-logo-title "R.T.F.M.  Run The Funking Monad")
+  ;; (setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
+  (setq dashboard-startup-banner "/home/mirsahebali/.config/doom/images/Arch-linux-logo.png")  ;; use custom image as banner
+  (setq dashboard-center-content t) ;; set to 't' for centered content
+  (setq dashboard-items '((recents . 5)
+                          (agenda . 5 )
+                          (bookmarks . 5)
+                          (projects . 5)))
+  :custom
+  (dashboard-modify-heading-icons '((recents . "file-text")
+                                    (bookmarks . "book")))
+  :config
+  (dashboard-setup-startup-hook))
 
+
+(after! ranger
+  :config
+  (setq ranger-cleanup-eagerly t)
+  (setq ranger-footer-delay 0.2)
+  (setq ranger-preview-delay 0.040)
+  (setq ranger-dont-show-binary t))
+(after! evil-surround
+  :config
+  (setq-default evil-surround-pairs-alist
+                (push '(?\( . ("(" . ")")) evil-surround-pairs-alist))
+  (add-to-list 'evil-surround-operator-alist
+               '(evil-paredit-change . change))
+  (add-to-list 'evil-surround-operator-alist
+               '(evil-paredit-delete . delete))
+  ;; this macro was copied from here: https://stackoverflow.com/a/22418983/4921402
+  (defmacro define-and-bind-quoted-text-object (name key start-regex end-regex)
+    (let ((inner-name (make-symbol (concat "evil-inner-" name)))
+          (outer-name (make-symbol (concat "evil-a-" name))))
+      `(progn
+         (evil-define-text-object ,inner-name (count &optional beg end type)
+           (evil-select-paren ,start-regex ,end-regex beg end type count nil))
+         (evil-define-text-object ,outer-name (count &optional beg end type)
+           (evil-select-paren ,start-regex ,end-regex beg end type count t))
+         (define-key evil-inner-text-objects-map ,key #',inner-name)
+         (define-key evil-outer-text-objects-map ,key #',outer-name))))
+
+  (define-and-bind-quoted-text-object "pipe" "|" "|" "|")
+  (define-and-bind-quoted-text-object "slash" "/" "/" "/")
+  (define-and-bind-quoted-text-object "asterisk" "*" "*" "*")
+  (define-and-bind-quoted-text-object "dollar" "$" "\\$" "\\$") ;; sometimes your have to escape the regex
+
+  )
+(after! web-mode
+  :config
+  (add-hook  'yas-after-exit-snippet-hook 'nil)
+  )
+
+(setq backup-directory-alist '(("." . "~/.config/emacs/backup_files"))
+      backup-by-copying t    ; Don't delink hardlinks
+      version-control t      ; Use version numbers on backups
+      delete-old-versions t  ; Automatically delete excess backups
+      kept-new-versions 20   ; how many of the newest versions to keep
+      kept-old-versions 5    ; and how many of the old
+      )
 
 
 ;; 'Mappings'
 
 (map!   "M-i" 'next-buffer
         "M-u" 'previous-buffer
-        "M-o" 'yas/expand
+        "M-o" 'yas-expand
         "M-S-i" 'tab-to-tab-stop
         "C-h" 'evil-window-left
         "C-j" 'evil-window-down
         "C-k" 'evil-window-up
         "C-l" 'evil-window-right)
+
+(map! :leader "r" 'ranger)
+
+;;'Harpoon' Mappings
+;; On vanilla (You can use another prefix instead C-c h)
+
+;; You can use this hydra menu that have all the commands
+(global-set-key (kbd "C-c a") 'harpoon-quick-menu-hydra)
+(global-set-key (kbd "C-c h <return>") 'harpoon-add-file)
+
+;; And the vanilla commands
+(global-set-key (kbd "C-c h f") 'harpoon-toggle-file)
+(global-set-key (kbd "C-c h h") 'harpoon-toggle-quick-menu)
+(global-set-key (kbd "C-c h c") 'harpoon-clear)
+(global-set-key (kbd "C-c h 1") 'harpoon-go-to-1)
+(global-set-key (kbd "C-c h 2") 'harpoon-go-to-2)
+(global-set-key (kbd "C-c h 3") 'harpoon-go-to-3)
+(global-set-key (kbd "C-c h 4") 'harpoon-go-to-4)
+(global-set-key (kbd "C-c h 5") 'harpoon-go-to-5)
+(global-set-key (kbd "C-c h 6") 'harpoon-go-to-6)
+(global-set-key (kbd "C-c h 7") 'harpoon-go-to-7)
+(global-set-key (kbd "C-c h 8") 'harpoon-go-to-8)
+(global-set-key (kbd "C-c h 9") 'harpoon-go-to-9)
+
+;; On doom emacs
+
+;; You can use this hydra menu that have all the commands
+(map! :n "C-SPC" 'harpoon-quick-menu-hydra)
+(map! :n "C-s" 'harpoon-add-file)
+
+;; And the vanilla commands
+(map! :leader "j c" 'harpoon-clear)
+(map! :leader "j f" 'harpoon-toggle-file)
+(map! :leader "1" 'harpoon-go-to-1)
+(map! :leader "2" 'harpoon-go-to-2)
+(map! :leader "3" 'harpoon-go-to-3)
+(map! :leader "4" 'harpoon-go-to-4)
+(map! :leader "5" 'harpoon-go-to-5)
+(map! :leader "6" 'harpoon-go-to-6)
+(map! :leader "7" 'harpoon-go-to-7)
+(map! :leader "8" 'harpoon-go-to-8)
+(map! :leader "9" 'harpoon-go-to-9)

@@ -51,3 +51,4 @@
 (package! lsp-tailwindcss)
 (package! catppuccin-theme)
 (package! dashboard)
+(package! harpoon)
